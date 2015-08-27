@@ -70,8 +70,15 @@ namespace UpnpTest
             return SendCommand(command, CommandType.Keyinput);
         }
 
+        //TODO Test this method by testing Is TV On
+        /// <summary>
+        /// Searches the network for a specific device
+        /// </summary>
+        /// <param name="deviceName"></param>
+        /// <returns></returns>
         private static async Task<string> SearchForDevice(string deviceName)
         {
+            
             await SearchForDevices();
 
             foreach (var device in FoundDeviceList)
@@ -148,13 +155,18 @@ namespace UpnpTest
             return response.Content;
         }
 
+        //TODO test method
         public static bool IsTvOn()
         {
             var pinger = new Ping();
             var result = pinger.Send(Host, 500);
             if (result != null && result.Status == IPStatus.Success)
             {
-                //Check if find TV Name
+                //Should change to compare IP Addresses
+                if (SearchForDevice("47LM7600").Result != "")
+                {
+                    return true;
+                }
             }
             return false;
         }
