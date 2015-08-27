@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
+using System.Net.NetworkInformation;
 using Rssdp;
 using RestSharp;
 using System.Threading.Tasks;
@@ -10,60 +9,81 @@ namespace UpnpTest
 {
     class Program
     {
-        static string host = "192.168.1.115";
-        static string port = "8080";
-        static string protocol = "roap"; // could also be hdcp
-        static string apiCommand = "api/command";
-        static string authCommand = "api/auth";
-        static string sessionID = "212440449";
+        private const string Host = "192.168.1.115";
+        private const string Port = "8080";
+        private const string Protocol = "roap"; // could also be hdcp
+        private const string ApiCommand = "api/command";
+        private const string AuthCommand = "api/auth";
+        private const string SessionId = "212440449";
 
-        static List<SsdpDevice> founddevicelist = new List<SsdpDevice>();
+        static readonly List<SsdpDevice> FoundDeviceList = new List<SsdpDevice>();
 
-        static void Main(string[] args)
+        static void Main()
         {
+            
             Console.WriteLine("Starting");
 
-            //Find TV and port on Network
-            var task = SearchForDevices();
-            task.Wait();
-            var foundTV = false;
-            string foundTVAddress;
-            foreach (var device in founddevicelist)
+            var deviceIp = SearchForDevice("47LM6700");
+            deviceIp.Wait();
+
+            if (deviceIp.Result != "")
             {
-                if (device.Manufacturer == "LG")
-                {
-                    Console.WriteLine("Found TV");
-                    Console.WriteLine("TV IP: {0}", device.ModelUrl);
-                    foundTV = true;
-                    foundTVAddress = device.ModelUrl.ToString();
-                }
+                Console.WriteLine("TV Found and IP is {0}", deviceIp.Result);
             }
-            if (foundTV == false)
-            {
-                Console.WriteLine("Can't find tv");
-            }
-            Console.WriteLine("Press Any Key to Continue");
-            Console.ReadKey();
 
             //Determine if session ID exists
             //If not do Auth Method
-
-            Console.WriteLine("What Command do you want to send?");
-            var commandRead = Console.ReadLine();
-
-            //Send command
-            var command = new KeyInputClass()
+            
+            while (true)
             {
-                session = sessionID,
+                Console.WriteLine("What Command do you want to send? Type exit to exit");
+                var commandRead = Console.ReadLine();
+
+                if (commandRead != null && commandRead.ToLowerInvariant() == "exit")
+                {
+                    return;
+                }
+
+                //Send command
+                var command = new KeyInputClass
+                {
+                    session = SessionId,
+                    type = "HandleKeyInput",
+                    value = int.Parse(commandRead)
+                };
+
+                var response = SendCommand(command, CommandType.Keyinput);
+                Console.WriteLine(response);
+            }
+        }
+
+        public static string SendKeyCommand(Commands.CommandCodeList commandCode)
+        {
+            //Send command
+            var command = new KeyInputClass
+            {
+                session = SessionId,
                 type = "HandleKeyInput",
-                value = int.Parse(commandRead)
+                value = commandCode.GetHashCode()
             };
 
-            var response = SendCommand(command, CommandType.Keyinput);
-            Console.WriteLine(response);
+            return SendCommand(command, CommandType.Keyinput);
+        }
 
-            Console.WriteLine("Press Any Key to End Program");
-            Console.ReadKey();
+        private static async Task<string> SearchForDevice(string deviceName)
+        {
+            await SearchForDevices();
+
+            foreach (var device in FoundDeviceList)
+            {
+                if (device.FriendlyName.Contains(deviceName))
+                {
+                    return device.ModelUrl.ToString();
+                }
+            }
+
+            Console.WriteLine("Can't find tv");
+            return "";
         }
 
         /// <summary>
@@ -79,21 +99,28 @@ namespace UpnpTest
                 
                 foreach (var foundDevice in foundDevices)
                 {
-                    // Device data returned only contains basic device details and location ]
-                    // of full device description.
-                    Console.WriteLine("Found " + foundDevice.Usn + " at " + foundDevice.DescriptionLocation.ToString());
+                    try
+                    {
+                        // Device data returned only contains basic device details and location ]
+                        // of full device description.
+                        Console.WriteLine("Found " + foundDevice.Usn + " at " + foundDevice.DescriptionLocation);
 
-                    // Can retrieve the full device description easily though.
-                    var fullDevice = await foundDevice.GetDeviceInfo();
-                    founddevicelist.Add(fullDevice);
-                    Console.WriteLine(fullDevice.FriendlyName);
-                    Console.WriteLine();
+                        // Can retrieve the full device description easily though.
+                        var fullDevice = await foundDevice.GetDeviceInfo();
+                        FoundDeviceList.Add(fullDevice);
+                        Console.WriteLine(fullDevice.FriendlyName);
+                        Console.WriteLine();
+                    }
+                    catch (Exception)
+                    {
+                        Console.WriteLine( "Exception Thrown");
+                    }
+                    
                 }
                 Console.WriteLine("Completed Search");
             }
-            return founddevicelist;
+            return FoundDeviceList;
         }
-
 
         public enum CommandType
         {
@@ -106,13 +133,13 @@ namespace UpnpTest
             string requestLocation;
             if (commandType == CommandType.Authorization)
             {
-                requestLocation = string.Format("{0}/{1}",protocol, authCommand);
+                requestLocation = string.Format("{0}/{1}",Protocol, AuthCommand);
             }
             else
             {
-                requestLocation = string.Format("{0}/{1}", protocol, apiCommand);
+                requestLocation = string.Format("{0}/{1}", Protocol, ApiCommand);
             }
-            var fullHost = string.Format("http://{0}:{1}", host, port);
+            var fullHost = string.Format("http://{0}:{1}", Host, Port);
             var client = new RestClient(fullHost);
             var request = new RestRequest(requestLocation, Method.POST);
             request.AddHeader("Content-Type", "application/atom+xml");
@@ -121,7 +148,16 @@ namespace UpnpTest
             return response.Content;
         }
 
-
+        public static bool IsTvOn()
+        {
+            var pinger = new Ping();
+            var result = pinger.Send(Host, 500);
+            if (result != null && result.Status == IPStatus.Success)
+            {
+                //Check if find TV Name
+            }
+            return false;
+        }
 
     }
 }

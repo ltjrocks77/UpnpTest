@@ -8,40 +8,39 @@ namespace UpnpTest
 {
     class Commands
     {
-        enum CommandCodeList
+        public enum CommandCodeList
         {
-            KEY_IDX_3D = 400,
-            /*
-            KEY_IDX_ARROW_DOWN = 2,
-            KEY_IDX_ARROW_LEFT = 3,
-            KEY_IDX_ARROW_RIGHT = 4,
-            KEY_IDX_ARROW_UP = 1,
-            */
+            PowerOff = 1,
+            //2-7 Cant Tell What function
+            // 8-11 Does something but only with TV
+            //12-19 Cant tell
+            EnterKey = 20,
+            HomeMenu = 21,
+            SettingsMenu = 22,
+            BackKey = 23,
+            VolumeUp = 24,
+            VolumeDown = 25,
+            Mute = 26,
+            ChannelUp = 27,
+            ChannelDown = 28,
 
-            KEY_IDX_BACK = 23,
+            ThreeDMenu = 400,
+            PreviousChannel = 403,
+            ExitKey = 412,
+            MyAppsMenu = 417,
+
             KEY_IDX_BLUE = 29,
             KEY_IDX_BTN_1 = 5,
             KEY_IDX_BTN_2 = 6,
             KEY_IDX_BTN_3 = 7,
             KEY_IDX_BTN_4 = 8,
-            KEY_IDX_CH_DOWN = 28,
-            KEY_IDX_CH_UP = 27,
-            KEY_IDX_ENTER = 20,
-            KEY_IDX_EXIT = 412,
             KEY_IDX_EXTERNAL_INPUT = 47,
             KEY_IDX_GREEN = 30,
-            KEY_IDX_HOME = 21,
-            KEY_IDX_MUTE = 26,
-            KEY_IDX_MYAPPS = 417,
             KEY_IDX_NETCAST = 408,
             KEY_IDX_PAUSE = 34,
             KEY_IDX_PLAY = 33,
-            KEY_IDX_POWER_OFF = 1,
-            KEY_IDX_PREV_CHANNEL = 403,
             KEY_IDX_RED = 31,
             KEY_IDX_STOP = 35,
-            KEY_IDX_VOL_DOWN = 25,
-            KEY_IDX_VOL_UP = 24,
             KEY_IDX_YELLOW = 32,
         }
     }
